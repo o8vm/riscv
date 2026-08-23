@@ -18,7 +18,8 @@ jobs:
         with:
           ref: lean-sail-v044-public-relay-20260823
       - name: Verify archive
-        run: sha256sum -c relay-output/lean-sail-079463-source.tar.zst.sha256
+        working-directory: relay-output
+        run: sha256sum -c lean-sail-079463-source.tar.zst.sha256
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
