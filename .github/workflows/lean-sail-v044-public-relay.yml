@@ -1,0 +1,52 @@
+name: Temporary pinned lean-sail source relay
+
+on:
+  push:
+    branches: [lean-sail-v044-public-relay-20260823]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  LEAN_SAIL_REVISION: 079463134b9c50450b8393e1566a09fc492a34d9
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout relay repository
+        uses: actions/checkout@v5
+
+      - name: Checkout exact lean-sail dependency
+        uses: actions/checkout@v5
+        with:
+          repository: rems-project/lean-sail
+          ref: 079463134b9c50450b8393e1566a09fc492a34d9
+          path: lean-sail
+          fetch-depth: 1
+
+      - name: Archive and commit exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C lean-sail rev-parse HEAD)" = "$LEAN_SAIL_REVISION"
+          rm -rf lean-sail/.git lean-sail/.lake
+          printf '%s\n' "$LEAN_SAIL_REVISION" > lean-sail/UPSTREAM-REVISION
+          find lean-sail -type f ! -name GENERATED-SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > lean-sail/GENERATED-SHA256SUMS
+          tar --zstd -cf lean-sail-079463-source.tar.zst lean-sail
+          sha256sum lean-sail-079463-source.tar.zst > lean-sail-079463-source.tar.zst.sha256
+          git fetch origin lean-sail-v044-public-relay-20260823
+          git checkout -B lean-sail-v044-public-relay-20260823 origin/lean-sail-v044-public-relay-20260823
+          rm -rf relay-output
+          mkdir relay-output
+          cp lean-sail-079463-source.tar.zst relay-output/
+          cp lean-sail-079463-source.tar.zst.sha256 relay-output/
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add relay-output
+          git commit -m "ci: store pinned lean-sail source [skip ci]"
+          git push origin HEAD:lean-sail-v044-public-relay-20260823
