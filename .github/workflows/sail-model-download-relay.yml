@@ -1,0 +1,31 @@
+name: Temporary Sail model downloadable artifact relay
+
+on:
+  push:
+    branches: [sail-v044-public-relay-20260823]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: sail-v044-public-relay-20260823
+      - name: Verify archive
+        working-directory: relay-output
+        run: sha256sum -c sail-riscv-H-Lean-ac2a585-source.tar.zst.sha256
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: sail-riscv-H-Lean-ac2a585-source
+          path: |
+            relay-output/sail-riscv-H-Lean-ac2a585-source.tar.zst
+            relay-output/sail-riscv-H-Lean-ac2a585-source.tar.zst.sha256
+          retention-days: 1
+          compression-level: 0
