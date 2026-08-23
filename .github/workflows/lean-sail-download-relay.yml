@@ -1,0 +1,30 @@
+name: Temporary lean-sail downloadable artifact relay
+
+on:
+  push:
+    branches: [lean-sail-v044-public-relay-20260823]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: lean-sail-v044-public-relay-20260823
+      - name: Verify archive
+        run: sha256sum -c relay-output/lean-sail-079463-source.tar.zst.sha256
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-sail-079463-source
+          path: |
+            relay-output/lean-sail-079463-source.tar.zst
+            relay-output/lean-sail-079463-source.tar.zst.sha256
+          retention-days: 1
+          compression-level: 0
